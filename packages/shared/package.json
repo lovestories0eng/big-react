@@ -1,0 +1,12 @@
+{
+	"name": "shared",
+	"version": "1.0.0",
+	"description": "所有公用辅助方法及类型定义",
+	"main": "index.js",
+	"dependencies": {
+		"shared": "workspace:*"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC"
+}
