@@ -1,12 +1,11 @@
 {
-  "name": "react-dom",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+	"name": "react-dom",
+	"version": "1.0.0",
+	"description": "",
+	"module": "index.ts",
+	"dependencies": {
+		"shared": "workspace:*"
+	},
+	"author": "",
+	"license": "ISC"
 }

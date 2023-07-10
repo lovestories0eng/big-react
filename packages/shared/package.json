@@ -4,7 +4,11 @@
 	"description": "所有公用辅助方法及类型定义",
 	"main": "index.js",
 	"dependencies": {
-		"shared": "workspace:*"
+		"shared": "workspace:*",
+		"react-reconciler": "workspace:*"
+	},
+	"peerDependencies": {
+		"react": "workspace:*"
 	},
 	"keywords": [],
 	"author": "",
