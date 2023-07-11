@@ -1,5 +1,6 @@
 import { FiberNode } from 'react-reconciler/src/fiber';
-import { HostText } from 'react-reconciler/src/workTags';
+import { HostComponent, HostText } from 'react-reconciler/src/workTags';
+import { DOMElement, updateFiberProps } from './SynctheticEvent';
 
 export type Container = Element;
 export type Instance = Element;
@@ -7,7 +8,10 @@ export type TextInstance = Text;
 
 export const createInstance = (type: string, props: any): Instance => {
 	const element = document.createElement(type);
-	return element;
+	// @ts-ignore
+	updateFiberProps(element as DOMElement, props);
+	// @ts-ignore
+	return element as DOMElement;
 };
 
 export const appendInitialChild = (
