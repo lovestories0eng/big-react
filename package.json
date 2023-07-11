@@ -5,30 +5,42 @@
 	"main": "index.js",
 	"scripts": {
 		"lint": "eslint --ext .ts,.js,.jsx,.tsx --fix --quiet ./packages",
-		"build:dev": "rimraf -rf dist && rollup --bundleConfigAsCjs --config scripts/rollup/dev.config.js"
+		"build:dev": "rimraf -rf dist && rollup --bundleConfigAsCjs --config scripts/rollup/dev.config.js",
+		"demo": "vite serve demos/test-fc --config scripts/vite/vite.config.js --force",
+		"test": "jest --config scripts/jest/jest.config.js"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
+		"@babel/core": "^7.22.8",
 		"@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+		"@babel/plugin-transform-react-jsx": "^7.22.5",
+		"@babel/preset-env": "^7.22.7",
 		"@commitlint/cli": "^17.6.6",
 		"@commitlint/config-conventional": "^17.6.6",
 		"@rollup/plugin-alias": "^5.0.0",
 		"@rollup/plugin-commonjs": "^25.0.2",
 		"@rollup/plugin-replace": "^5.0.2",
+		"@types/react": "^18.2.14",
+		"@types/react-dom": "^18.2.6",
 		"@typescript-eslint/eslint-plugin": "^5.28.0",
 		"@typescript-eslint/parser": "^5.61.0",
+		"@vitejs/plugin-react": "^4.0.1",
 		"commitlint": "^17.6.6",
 		"eslint": "^8.44.0",
 		"eslint-config-prettier": "^8.8.0",
 		"eslint-plugin-prettier": "^4.2.1",
 		"husky": "^8.0.3",
+		"jest": "^29.6.1",
+		"jest-config": "^29.6.1",
+		"jest-environment-jsdom": "^29.6.1",
 		"prettier": "^2.7.1",
 		"rimraf": "^5.0.1",
 		"rollup": "^3.26.2",
 		"rollup-plugin-generate-package-json": "^3.2.0",
 		"rollup-plugin-typescript2": "^0.35.0",
-		"typescript": "^5.1.6"
+		"typescript": "^5.1.6",
+		"vite": "^4.4.0"
 	}
 }

@@ -6,6 +6,9 @@
 	"dependencies": {
 		"shared": "workspace:*"
 	},
+	"peerDependencies": {
+		"react": "workspace:*"
+	},
 	"author": "",
 	"license": "ISC"
 }
