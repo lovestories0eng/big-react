@@ -7,7 +7,7 @@ const validEventTypeList = ['click'];
 type EventCallback = (e: Event) => void;
 
 interface SynctheticEvent extends Event {
-	__stopPropagation: boolean
+	__stopPropagation: boolean;
 }
 
 interface Paths {
@@ -48,7 +48,7 @@ function createSynctheticEvent(e: Event) {
 		if (originStopPropagation) {
 			originStopPropagation();
 		}
-	}
+	};
 
 	return synctheticEvent;
 }
@@ -109,7 +109,7 @@ function collectPaths(
 
 	while (targetElement && targetElement !== container) {
 		// 收集
-		const elementProps = targetElement[elementPropsKey]
+		const elementProps = targetElement[elementPropsKey];
 		if (elementProps) {
 			// click -> onClick onClickCapture
 			const callbackNameList = getEventCallbackNameFromEventType(eventType);
