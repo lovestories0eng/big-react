@@ -6,18 +6,8 @@ function App() {
 
 	const arr =
 		num % 2 === 0
-			? [
-					<li key="1">1</li>,
-					<li key="2">2</li>,
-					<li key="3">3</li>,
-					<li key="4">4</li>
-			  ]
-			: [
-					<li key="3">3</li>,
-					<li key="2">2</li>,
-					<li key="1">1</li>,
-					<li key="4">4</li>
-			  ];
+			? [<li key="1">1</li>, <li key="2">2</li>, <li key="3">3</li>]
+			: [<li key="3">3</li>, <li key="2">2</li>, <li key="1">1</li>];
 
 	// return (
 	// 	<>
@@ -27,10 +17,17 @@ function App() {
 	// );
 
 	return (
-		<ul onClickCapture={() => setNum(num + 1)}>
-			<li>4</li>
+		<ul
+			onClickCapture={() => {
+				setNum((num) => num + 1);
+				setNum((num) => num + 1);
+				setNum((num) => num + 1);
+			}}
+		>
+			{num}
+			{/* <li>4</li>
 			<li>5</li>
-			{arr}
+			{arr} */}
 		</ul>
 	);
 

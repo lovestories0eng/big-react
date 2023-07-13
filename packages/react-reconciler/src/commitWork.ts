@@ -136,9 +136,11 @@ function commitNestedComponent(
 	let node = root;
 	while (true) {
 		onCommitUnmount(node);
+		// 向下
 		if (node.child !== null) {
 			node.child.return = node;
 			node = node.child;
+			continue;
 		}
 		if (node === root) {
 			// 终止
