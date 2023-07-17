@@ -77,7 +77,6 @@ const HooksDispatcherOnMount: Dispatcher = {
 	useEffect: mountEffect
 };
 
-
 const HooksDispatcherOnUpdate: Dispatcher = {
 	useState: updateState,
 	useEffect: updateEffect
@@ -150,7 +149,7 @@ function pushEffect(
 		destroy,
 		deps,
 		next: null
-	}
+	};
 	const fiber = currentlyRenderingFiber as FiberNode;
 	const updateQueue = fiber.updateQueue as FCUpdateQueue<any>;
 	if (updateQueue === null) {
@@ -179,7 +178,6 @@ function createFCUpdateQueue<State>() {
 	const updateQueue = createUpdateQueue<State>() as FCUpdateQueue<State>;
 	updateQueue.lastEffect = null;
 	return updateQueue;
-
 }
 
 function updateState<State>(): [State, Dispatch<State>] {
