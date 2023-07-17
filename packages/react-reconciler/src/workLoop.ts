@@ -125,7 +125,6 @@ function performConcurrentWorkOnRoot(
 	root: FiberRootNode,
 	didTimeout: boolean
 ): any {
-
 	// 保证useEffect回调执行
 	const curCallback = root.callbackNode;
 	const didFlushPassiveEffect = flushPassiveEffects(root.pendingPassiveEffects);
@@ -195,7 +194,7 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
 
 function renderRoot(root: FiberRootNode, lane: Lane, shouldTimeSlice: boolean) {
 	if (__DEV__) {
-		console.log(`开始${shouldTimeSlice ? '并发' : '同步'}更新`, root)
+		console.log(`开始${shouldTimeSlice ? '并发' : '同步'}更新`, root);
 	}
 
 	if (wipRootRenderLane !== lane) {
