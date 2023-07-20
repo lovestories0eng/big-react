@@ -333,7 +333,7 @@ function updateTransition(): [boolean, (callback: () => void) => void] {
 	const [isPending] = updateState();
 	const hook = updateWorkInProgressHook();
 	const start = hook.memoizedState;
-	return [isPending as boolean, start]
+	return [isPending as boolean, start];
 }
 
 function startTransition(setPending: Dispatch<boolean>, callback: () => void) {
