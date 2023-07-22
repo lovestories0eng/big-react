@@ -7,16 +7,22 @@ import {
 } from 'hostConfig';
 import { FiberNode } from './fiber';
 import {
+	ContextProvider,
 	Fragment,
 	FunctionComponent,
 	HostComponent,
 	HostRoot,
 	HostText
 } from './workTags';
-import { NoFlags, Update } from './fiberFlags';
+import { NoFlags, Ref, Update } from './fiberFlags';
+import { popProvider } from './fiberContext';
 
 function markUpdate(fiber: FiberNode) {
 	fiber.flags |= Update;
+}
+
+function markRef(fiber: FiberNode) {
+	fiber.flags |= Ref;
 }
 
 export const completeWork = (wip: FiberNode) => {
@@ -31,11 +37,19 @@ export const completeWork = (wip: FiberNode) => {
 				// 2. 变了 Update flag
 				// className style
 				markUpdate(wip);
+				// 标记ref
+				if (current.ref !== wip.ref) {
+					markRef(wip);
+				}
 			} else {
 				// 构建dom
 				const instance = createInstance(wip.type, newProps);
 				// 将dom插入到dom树中
 				appendAllChildren(instance, wip);
+				// 标记Ref
+				if (wip.ref !== null) {
+					markRef(wip);
+				}
 				wip.stateNode = instance;
 			}
 			bubbleProperties(wip);
@@ -57,6 +71,11 @@ export const completeWork = (wip: FiberNode) => {
 		case HostRoot:
 		case FunctionComponent:
 		case Fragment:
+			bubbleProperties(wip);
+			return null;
+		case ContextProvider:
+			const context = wip.type._context;
+			popProvider(context);
 			bubbleProperties(wip);
 			return null;
 		default:

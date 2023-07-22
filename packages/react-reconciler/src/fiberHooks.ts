@@ -10,7 +10,7 @@ import {
 	processUpdateQueue,
 	Update
 } from './updateQueue';
-import { Action } from 'shared/ReactTypes';
+import { Action, ReactContext } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
 import { Lane, NoLane, requestUpdateLanes } from './fiberLanes';
 import { Flags, PassiveEffect } from './fiberFlags';
@@ -79,14 +79,36 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
 const HooksDispatcherOnMount: Dispatcher = {
 	useState: mountState,
 	useEffect: mountEffect,
-	useTransition: mountTransition
+	useTransition: mountTransition,
+	useRef: mountRef,
+	useContext: readContext
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
 	useState: updateState,
 	useEffect: updateEffect,
-	useTransition: updateTransition
+	useTransition: updateTransition,
+	useRef: updateRef,
+	useContext: readContext
 };
+
+/**
+ * useRef使用 ref = useRef(null)
+ * @param initialValue
+ * @returns
+ */
+function mountRef<T>(initialValue: T): { current: T } {
+	const hook = mountWorkInProgressHook();
+	const ref = { current: initialValue };
+	hook.memoizedState = ref;
+	return ref;
+}
+
+function updateRef<T>(initialValue: T): { current: T } {
+	const hook = updateWorkInProgressHook();
+	console.log('--updateRef--updateRef', hook);
+	return hook.memoizedState;
+}
 
 function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
 	const hook = mountWorkInProgressHook();
@@ -371,4 +393,13 @@ function mountWorkInProgressHook(): Hook {
 	}
 
 	return workInProgressHook;
+}
+
+function readContext<T>(context: ReactContext<T>) {
+	const consumer = currentlyRenderingFiber;
+	if (consumer === null) {
+		throw new Error('context需要有consumer');
+	}
+	const value = context._currentValue;
+	return value;
 }
