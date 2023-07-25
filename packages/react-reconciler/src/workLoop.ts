@@ -34,6 +34,7 @@ import { scheduleMicroTask } from 'hostConfig';
 import { HookHasEffect, Passive } from './hookEffectTags';
 import { unstable_shouldYield, unstable_cancelCallback } from 'scheduler';
 
+// 表示当前正在调和的 fiber 节点，之后简称 wip
 let workInProgress: FiberNode | null = null;
 let wipRootRenderLane: Lane = NoLane;
 let rootDoesHasPassiveEffect = false;
@@ -43,6 +44,7 @@ const RootInComplete = 1;
 const RootCompleted = 2;
 // TODO 执行过程中报错了
 
+// 初始化，将workInProgress 指向第一个fiberNode
 function prepareFreshStack(root: FiberRootNode, lane: Lane) {
 	root.finishedLane = NoLane;
 	root.finishedWork = null;
@@ -112,6 +114,7 @@ function markRootUpdated(root: FiberRootNode, lane: Lane) {
 	root.pendingLanes = mergeLanes(root.pendingLanes, lane);
 }
 
+// scheduleUpdateOnFiber主要是找到hostFiberNode, 然后开始reconciler过程
 function markUpdateFormFiberToRoot(fiber: FiberNode) {
 	let node = fiber;
 	let parent = node.return;
@@ -145,7 +148,7 @@ function performConcurrentWorkOnRoot(
 	}
 	const needSync = lane === SyncLane || didTimeout;
 	// render 阶段
-	const exitStatus = renderRoot(root, lane, !needSync);
+	const exitStatus: RootExitStatus = renderRoot(root, lane, !needSync);
 
 	ensureRootIsScheduled(root);
 
@@ -183,13 +186,14 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
 
 	const exitStatus = renderRoot(root, nextLane, false);
 
+	// 如果 render 阶段完毕
 	if (exitStatus === RootCompleted) {
 		const finishedWork = root.current.alternate;
 		root.finishedWork = finishedWork;
 		root.finishedLane = nextLane;
 		wipRootRenderLane = NoLane;
 
-		// wip fiberNode树 树中的flags
+		// wip fiberNode树 树中的flags执行对应的操作
 		commitRoot(root);
 	} else if (__DEV__) {
 		console.error('还未实现的同步更新结束状态');
@@ -309,6 +313,12 @@ function flushPassiveEffects(pendingPassiveEffects: PendingPassiveEffects) {
 	return didFlushPassiveEffect;
 }
 
+// 不停的根据 wip 进行单个 fiberNode 的处理
+// 此时 wip 指向的 hostRootFiber
+// 开始执行 performUnitOfWork 进行递归操作
+// 其中递：beginWork
+// 归：completeWork
+// React 通过 DFS，首先根据头部节点找到对应的叶子节点
 function workLoopSync() {
 	while (workInProgress !== null) {
 		performUnitOfWork(workInProgress);
@@ -322,6 +332,7 @@ function workLoopConcurrent() {
 }
 
 function performUnitOfWork(fiber: FiberNode) {
+	// next 是 fiber 的子 fiber 或者是 null
 	const next = beginWork(fiber, wipRootRenderLane);
 	fiber.memoizedProps = fiber.pendingProps;
 

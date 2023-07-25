@@ -15,6 +15,8 @@ import { Lane } from './fiberLanes';
 import { Ref } from './fiberFlags';
 import { pushProvider } from './fiberContext';
 
+// 主要是根据当前 fiberNode 创建子 fiberNode
+// 以及在 update 时标记 placement（新增、移动）ChildDeletion(删除)
 export const beginWork = (wip: FiberNode, renderLane: Lane) => {
 	// 比较，返回子fiberNode
 	switch (wip.tag) {

@@ -15,10 +15,13 @@ export interface UpdateQueue<State> {
 	dispatch: Dispatch<State> | null;
 }
 
+// 创建更新
 export const createUpdate = <State>(
 	action: Action<State>,
 	lane: Lane
 ): Update<State> => {
+	// 由于初始化的时候传入的是ReactElement（<App/>）
+	// 所以返回的是App对应的ReactElement对象
 	return {
 		action,
 		lane,
@@ -26,6 +29,7 @@ export const createUpdate = <State>(
 	};
 };
 
+// 初始化 updateQueue
 export const createUpdateQueue = <State>() => {
 	return {
 		shared: {
@@ -35,8 +39,11 @@ export const createUpdateQueue = <State>() => {
 	} as UpdateQueue<State>;
 };
 
+// 将更新推进队列
 export const enqueueUpdate = <State>(
+	// 更新队列的引用
 	updateQueue: UpdateQueue<State>,
+	// 新增的队列
 	update: Update<State>
 ) => {
 	const pending = updateQueue.shared.pending;
@@ -49,6 +56,7 @@ export const enqueueUpdate = <State>(
 		// a.next = b
 		pending.next = update;
 	}
+	// render <App />时，得到了更新队列。其实是一个ReactElement组件。（我们调用render传入的jsx）
 	// pending = b -> a -> b
 	updateQueue.shared.pending = update;
 	// c.next = b.next

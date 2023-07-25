@@ -7,6 +7,7 @@ export type Instance = Element;
 export type TextInstance = Text;
 
 export const createInstance = (type: string, props: any): Instance => {
+	// 创建 dom 元素
 	const element = document.createElement(type);
 	// @ts-ignore
 	updateFiberProps(element as DOMElement, props);
@@ -18,9 +19,11 @@ export const appendInitialChild = (
 	parent: Instance | Container,
 	child: Instance
 ) => {
+	// 父元素添加子元素
 	parent.appendChild(child);
 };
 
+// 创建文本节点
 export const createTextInstance = (content: string) => {
 	return document.createTextNode(content);
 };

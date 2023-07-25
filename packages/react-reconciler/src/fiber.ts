@@ -14,23 +14,31 @@ import { CallbackNode } from 'scheduler';
 import { REACT_PROVIDER_TYPE } from 'shared/ReactSymbols';
 
 export class FiberNode {
+	// 类型，如 FunctionComponent () => {}
 	type: any;
 	tag: WorkTag;
+	// 等待更新的属性
 	pendingProps: Props;
 	key: Key;
+	// dom 引用
 	stateNode: any;
 	ref: Ref | null;
 
+	// 指向父 fiberNode
 	return: FiberNode | null;
 	sibling: FiberNode | null;
 	child: FiberNode | null;
 	index: number;
 
+	// 正在工作的属性
 	memoizedProps: Props | null;
 	memoizedState: any;
+	// 双缓存树指向（workInProgress 和 current 切换）
 	alternate: FiberNode | null;
 
+	// 副作用标识
 	flags: Flags;
+	// 子树的副作用
 	subtreeFlags: Flags;
 	updateQueue: unknown;
 	deletions: FiberNode[] | null;
@@ -109,11 +117,13 @@ export const createWorkInProgress = (
 		// mount
 		wip = new FiberNode(current.tag, pendingProps, current.key);
 		wip.stateNode = current.stateNode;
+		// 创建双缓存
 		wip.alternate = current;
 		current.alternate = wip;
 	} else {
 		// update
 		wip.pendingProps = pendingProps;
+		// 清掉副作用（上一次更新遗留下来的）
 		wip.flags = NoFlags;
 		wip.subtreeFlags = NoFlags;
 		wip.deletions = null;

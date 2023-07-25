@@ -6,7 +6,9 @@ export type WorkTag =
 	| typeof Fragment
 	| typeof ContextProvider;
 
+// 函数组件
 export const FunctionComponent = 0;
+// 根节点
 export const HostRoot = 3;
 export const HostComponent = 5;
 export const HostText = 6;
