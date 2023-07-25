@@ -334,9 +334,11 @@ function workLoopConcurrent() {
 function performUnitOfWork(fiber: FiberNode) {
 	// next 是 fiber 的子 fiber 或者是 null
 	const next = beginWork(fiber, wipRootRenderLane);
+	// 工作完成，需要将 pendingProps 复制给已经渲染的 props
 	fiber.memoizedProps = fiber.pendingProps;
 
 	if (next === null) {
+		// 没有子 fiber
 		completeUnitOfWork(fiber);
 	} else {
 		workInProgress = next;

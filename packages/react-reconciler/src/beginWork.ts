@@ -53,14 +53,21 @@ function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
 	return wip.child;
 }
 
+/**
+  processUpdateQueue： 是根据不同的类型（函数和其他）生成memoizedState
+*/
 function updateHostRoot(wip: FiberNode, renderLane: Lane) {
 	const baseState = wip.memoizedState;
 	const updateQueue = wip.updateQueue as UpdateQueue<Element>;
+	// 获取之前的更新队列
 	const pending = updateQueue.shared.pending;
 	updateQueue.shared.pending = null;
+	// 最新状态
 	const { memoizedState } = processUpdateQueue(baseState, pending, renderLane);
+	// 其实就是传入的 element <App />
 	wip.memoizedState = memoizedState;
 
+	// 就是传入的 ReactElement 对象
 	const nextChildren = wip.memoizedState;
 	reconcileChildren(wip, nextChildren);
 	return wip.child;
