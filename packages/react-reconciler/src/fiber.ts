@@ -4,14 +4,21 @@ import {
 	Fragment,
 	FunctionComponent,
 	HostComponent,
-	WorkTag
+	SuspenseComponent,
+	WorkTag,
+	OffscreenComponent
 } from './workTags';
 import { Flags, NoFlags } from './fiberFlags';
 import { Container } from 'hostConfig';
 import { Lane, Lanes, NoLane, NoLanes } from './fiberLanes';
 import { Effect } from './fiberHooks';
 import { CallbackNode } from 'scheduler';
-import { REACT_PROVIDER_TYPE } from 'shared/ReactSymbols';
+import { REACT_PROVIDER_TYPE, REACT_SUSPENSE_TYPE } from 'shared/ReactSymbols';
+
+export interface OffscreenProps {
+	mode: 'visible' | 'hidden';
+	children: any;
+}
 
 export class FiberNode {
 	// 类型，如 FunctionComponent () => {}
@@ -162,6 +169,8 @@ export function createFiberFromElement(element: ReactElementType) {
 		 * }
 		 */
 		fiberTag = ContextProvider;
+	} else if (type === REACT_SUSPENSE_TYPE) {
+		fiberTag = SuspenseComponent;
 	} else if (typeof type !== 'function' && __DEV__) {
 		console.warn('未定义的type类型', element);
 	}
@@ -173,5 +182,12 @@ export function createFiberFromElement(element: ReactElementType) {
 
 export function createFiberFromFragment(elements: any[], key: Key): FiberNode {
 	const fiber = new FiberNode(Fragment, elements, key);
+	return fiber;
+}
+
+export function createFiberFormOffscreen(
+	pendingProps: OffscreenProps
+): FiberNode {
+	const fiber = new FiberNode(OffscreenComponent, pendingProps, null);
 	return fiber;
 }

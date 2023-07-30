@@ -1,7 +1,7 @@
 import { useState, createContext, useContext } from 'react';
 import ReactDOM from 'react-dom/client';
 
-const ctxA = createContext('deafult A');
+const ctxA = createContext('default A');
 const ctxB = createContext('default B');
 
 function App() {

@@ -12,6 +12,7 @@ import {
 	commitHookEffectListCreate,
 	commitHookEffectListDestroy,
 	commitHookEffectListUnmount,
+	commitLayoutEffects,
 	commitMutationEffects
 } from './commitWork';
 import {
@@ -26,13 +27,14 @@ import {
 
 import {
 	unstable_scheduleCallback as scheduleCallback,
-	unstable_NormalPriority as NormalPriority
+	unstable_NormalPriority as NormalPriority,
+	unstable_shouldYield,
+	unstable_cancelCallback
 } from 'scheduler';
 
 import { flushSyncCallbacks, scheduleSyncCallback } from './syncTaskQueue';
 import { scheduleMicroTask } from 'hostConfig';
 import { HookHasEffect, Passive } from './hookEffectTags';
-import { unstable_shouldYield, unstable_cancelCallback } from 'scheduler';
 
 // 表示当前正在调和的 fiber 节点，之后简称 wip
 let workInProgress: FiberNode | null = null;
@@ -282,6 +284,7 @@ function commitRoot(root: FiberRootNode) {
 		commitMutationEffects(finishedWork, root);
 		root.current = finishedWork;
 		// layout
+		commitLayoutEffects(finishedWork, root);
 	} else {
 		root.current = finishedWork;
 	}
