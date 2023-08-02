@@ -39,6 +39,7 @@ let nextEffect: FiberNode | null = null;
 const commitEffects = (
 	phrase: 'mutation' | 'layout',
 	mask: Flags,
+	// finishedWork, root
 	callback: (fiber: FiberNode, root: FiberRootNode) => void
 ) => {
 	return (finishedWork: FiberNode, root: FiberRootNode) => {
@@ -46,18 +47,22 @@ const commitEffects = (
 
 		while (nextEffect !== null) {
 			const child: FiberNode | null = nextEffect.child;
-			// 向下遍历
+			// 向下遍历到底，如果走了 else 这个分支，相关的 flags 会随着 DOM 操作被去除
 			if ((nextEffect.subtreeFlags & mask) !== NoFlags && child !== null) {
 				nextEffect = child;
 			} else {
 				// 向上遍历 DFS
 				up: while (nextEffect !== null) {
+					// 执行回调函数
+					// 这里 commitMutationEffectsOnFiber 会进行相应的 DOM 操作 并去除相应的 flags
 					callback(nextEffect, root);
+					// 遍历兄弟节点
 					const sibling: FiberNode | null = nextEffect.sibling;
 					if (sibling !== null) {
 						nextEffect = sibling;
 						break up;
 					}
+					// 如果兄弟节点都遍历完了则遍历父亲节点
 					nextEffect = nextEffect.return;
 				}
 			}
@@ -65,7 +70,7 @@ const commitEffects = (
 	};
 };
 
-// 根据 fiber.flags
+// 根据 fiber.flags 来进行相应的 Placement、ChildDeletion 等等
 const commitMutationEffectsOnFiber = (
 	finishedWork: FiberNode,
 	root: FiberRootNode

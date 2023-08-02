@@ -27,7 +27,7 @@ function markRef(fiber: FiberNode) {
 	fiber.flags |= Ref;
 }
 
-// 在 mount 时构建离屏 Dom Tree, 初始化属性
+// 在 mount 时构建离屏 Dom Tree, 把 Dom 实例赋值到 FiberNode.stateNode，并初始化属性
 // 在 update 时标记 Update (属性更新）、执行 flags 冒泡
 export const completeWork = (wip: FiberNode) => {
 	const newProps = wip.pendingProps;
@@ -41,6 +41,7 @@ export const completeWork = (wip: FiberNode) => {
 				// 1. props是否变化
 				// 2. 变了 Update flag
 				// className style
+				// 标记为更新
 				markUpdate(wip);
 				// 标记ref
 				if (current.ref !== wip.ref) {

@@ -167,6 +167,7 @@ function performConcurrentWorkOnRoot(
 	}
 	if (exitStatus === RootCompleted) {
 		if (exitStatus === RootCompleted) {
+			// 使用双缓存机制，更新 root.current.alternate 而不直接更新 root.current
 			const finishedWork = root.current.alternate;
 			root.finishedWork = finishedWork;
 			root.finishedLane = lane;
@@ -281,7 +282,7 @@ function commitRoot(root: FiberRootNode) {
 		}
 	}
 
-	// 判断是否存在3个子阶段需要执行的操作
+	// 判断是否存在 3 个子阶段需要执行的操作
 	const subtreeHasEffect =
 		(finishedWork.subtreeFlags & MutationMask) !== NoFlags;
 	const rootHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
@@ -290,6 +291,7 @@ function commitRoot(root: FiberRootNode) {
 		// beforeMutation
 		// mutation Placement
 		commitMutationEffects(finishedWork, root);
+		// 在 mutation 之后，更新 root.current
 		root.current = finishedWork;
 		// layout
 		commitLayoutEffects(finishedWork, root);
@@ -298,6 +300,7 @@ function commitRoot(root: FiberRootNode) {
 	}
 
 	rootDoesHasPassiveEffect = false;
+	// 重新调度
 	ensureRootIsScheduled(root);
 }
 

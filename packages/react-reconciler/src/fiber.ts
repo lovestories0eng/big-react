@@ -118,7 +118,7 @@ export const createWorkInProgress = (
 	current: FiberNode,
 	pendingProps: Props
 ): FiberNode => {
-	// 指向被缓存的 FiberNode
+	// workInProgress 指向被缓存的 FiberNode
 	let wip = current.alternate;
 
 	if (wip === null) {
