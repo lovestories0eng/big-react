@@ -222,6 +222,7 @@ function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
 }
 
 /**
+ * @description 取出 memoizedState，并根据 memoizedState 创建 FiberNode
 	processUpdateQueue： 是根据不同的类型（函数和其他）生成memoizedState
 */
 function updateHostRoot(wip: FiberNode, renderLane: Lane) {
@@ -235,7 +236,7 @@ function updateHostRoot(wip: FiberNode, renderLane: Lane) {
 	// 其实就是传入的 element <App />
 	wip.memoizedState = memoizedState;
 
-	// 就是传入的 ReactElement 对象
+	// 就是传入的 ReactElement 对象，也是最新的 state
 	const nextChildren = wip.memoizedState;
 	reconcileChildren(wip, nextChildren);
 	return wip.child;

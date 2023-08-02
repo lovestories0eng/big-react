@@ -16,7 +16,9 @@ import { Lane, NoLane, requestUpdateLanes } from './fiberLanes';
 import { Flags, PassiveEffect } from './fiberFlags';
 import { HookHasEffect, Passive } from './hookEffectTags';
 
+// 正在 render 的函数组件
 let currentlyRenderingFiber: FiberNode | null = null;
+// 链表结构，把所有的 Hooks 串到一个链表上面
 let workInProgressHook: Hook | null = null;
 let currentHook: Hook | null = null;
 let renderLane: Lane = NoLane;
@@ -55,6 +57,7 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
 	wip.updateQueue = null;
 	renderLane = lane;
 
+	// 生成双缓存
 	const current = wip.alternate;
 	if (current !== null) {
 		// update
@@ -64,8 +67,10 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
 		currentDispatcher.current = HooksDispatcherOnMount;
 	}
 
+	// 这里的属性在 createFiberFormElement 中得到
 	const Component = wip.type;
 	const props = wip.pendingProps;
+	// 执行函数，得到 JSX 对象
 	const children = Component(props);
 
 	// 重置操作
@@ -209,7 +214,6 @@ function createFCUpdateQueue<State>() {
 }
 
 function updateState<State>(): [State, Dispatch<State>] {
-	// 找到当前useState对应的hook数据
 	const hook = updateWorkInProgressHook();
 
 	// 计算新state的逻辑
@@ -262,12 +266,14 @@ function mountState<State>(
 	const hook = mountWorkInProgressHook();
 
 	let memoizedState;
+	// 记录 mount 时传入的 state
 	if (initialState instanceof Function) {
 		memoizedState = initialState();
 	} else {
 		memoizedState = initialState;
 	}
 
+	// 创建一条新的更新队列
 	const queue = createUpdateQueue<State>();
 	hook.updateQueue = queue;
 	hook.memoizedState = memoizedState;
@@ -281,13 +287,17 @@ function mountState<State>(
 }
 
 function dispatchSetState<State>(
+	// 这里的 Fiber 是函数组件
 	fiber: FiberNode,
 	updateQueue: UpdateQueue<State>,
 	action: Action<State>
 ) {
 	const lane = requestUpdateLanes();
+	// 创建一个新的更新需求，这里如果有多个 setState，最终只会执行一次 setState
 	const update = createUpdate(action, lane);
+	// 把更新需求压入队列
 	enqueueUpdate(updateQueue, update);
+	// 重新进行调度
 	scheduleUpdateOnFiber(fiber, lane);
 }
 
@@ -316,6 +326,7 @@ function updateWorkInProgressHook(): Hook {
 		);
 	}
 
+	// currentHook = currentHook.next
 	currentHook = nextCurrentHook as Hook;
 	const newHook = {
 		memoizedState: currentHook.memoizedState,
@@ -370,6 +381,7 @@ function startTransition(setPending: Dispatch<boolean>, callback: () => void) {
 }
 
 function mountWorkInProgressHook(): Hook {
+	// 创建一个新的 hook
 	const hook: Hook = {
 		memoizedState: null,
 		updateQueue: null,

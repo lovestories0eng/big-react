@@ -8,6 +8,7 @@ import { intiEvent } from './SynctheticEvent';
 
 // 创建根 fiberRootNode 节点
 export function createRoot(container: Container) {
+	// 创建 FiberRootNode
 	const root = createContainer(container);
 
 	return {

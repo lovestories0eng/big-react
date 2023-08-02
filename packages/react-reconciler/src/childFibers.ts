@@ -12,6 +12,7 @@ import { ChildDeletion, Placement } from './fiberFlags';
 type ExistingChildren = Map<string | number, FiberNode>;
 
 function ChildReconciler(shouldTrackEffects: boolean) {
+	// 打上 ChildDeletion 标记，并维护 deletions 数组
 	function deleteChild(returnFiber: FiberNode, childToDelete: FiberNode) {
 		if (!shouldTrackEffects) {
 			return;
@@ -35,6 +36,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		let childToDelete = currentFirstChild;
 		while (childToDelete !== null) {
 			deleteChild(returnFiber, childToDelete);
+			// 删除所有的兄弟节点
 			childToDelete = childToDelete.sibling;
 		}
 	}
@@ -101,17 +103,22 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 				// 类型没变，可以复用
 				const existing = useFiber(current, { content });
 				existing.return = returnFiber;
+				// 删除所有的兄弟节点
 				deleteRemainingChildren(returnFiber, current.sibling);
 				return existing;
 			}
 			deleteChild(returnFiber, current);
+			// 找到兄弟节点，兄弟节点的父亲是一样的
 			current = current.sibling;
 		}
+		// 写入 content
 		const fiber = new FiberNode(HostText, { content }, null);
+		// 维护父子结构
 		fiber.return = returnFiber;
 		return fiber;
 	}
 
+	// 打上 Placement 标记
 	function placeSingleChild(fiber: FiberNode) {
 		if (shouldTrackEffects && fiber.alternate === null) {
 			fiber.flags |= Placement;
@@ -157,6 +164,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 				lastNewFiber = newFiber;
 				firstNewFiber = newFiber;
 			} else {
+				// 建立兄弟关系
 				lastNewFiber.sibling = newFiber;
 				lastNewFiber = lastNewFiber.sibling;
 			}
@@ -270,14 +278,17 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 			newChild.key === null;
 
 		if (isUnkeyedTopLevelFragment) {
+			// 如果是 fragment ，则直接取其 props 的 children
 			newChild = newChild.props.children;
 		}
 
 		if (typeof newChild === 'object' && newChild !== null) {
+			// Array
 			if (Array.isArray(newChild)) {
 				return reconcileChildrenArray(returnFiber, currentFiber, newChild);
 			}
 			switch (newChild.$$typeof) {
+				// REACT ELEMENT
 				case REACT_ELEMENT_TYPE:
 					return placeSingleChild(
 						reconcileSingleElement(returnFiber, currentFiber, newChild)
@@ -296,8 +307,9 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 				reconcileSingleTextNode(returnFiber, currentFiber, newChild)
 			);
 		}
+
 		if (currentFiber !== null) {
-			// 兜底删除
+			// 其他情况（非 Fragment, REACT ELEMENT, Array, text）兜底删除
 			deleteRemainingChildren(returnFiber, currentFiber);
 		}
 
@@ -310,6 +322,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 }
 
 function useFiber(fiber: FiberNode, pendingProps: Props): FiberNode {
+	// 创建出新的 FiberNode
 	const clone = createWorkInProgress(fiber, pendingProps);
 	clone.index = 0;
 	clone.sibling = null;

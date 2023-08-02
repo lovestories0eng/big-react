@@ -65,6 +65,7 @@ const commitEffects = (
 	};
 };
 
+// 根据 fiber.flags
 const commitMutationEffectsOnFiber = (
 	finishedWork: FiberNode,
 	root: FiberRootNode
@@ -447,6 +448,7 @@ function getHostSibling(fiber: FiberNode) {
 
 function getHostParent(fiber: FiberNode): Container | null {
 	let parent = fiber.return;
+	// 当前的 fiber 节点有可能是 FunctionComponent，因此需要向上遍历找到 HostComponent
 	while (parent) {
 		const parentTag = parent.tag;
 		// hostComponent

@@ -84,9 +84,9 @@ export const processUpdateQueue = <State>(
 		let pending = pendingUpdate.next as Update<any>;
 
 		let newBaseState = baseState;
+		let newState = baseState;
 		let newBaseQueueFirst: Update<State> | null = null;
 		let newBaseQueueLast: Update<State> | null = null;
-		let newState = baseState;
 
 		do {
 			const updateLane = pending.lane;
@@ -106,17 +106,21 @@ export const processUpdateQueue = <State>(
 					// last u2 u1 -> u2
 					// first u0 -> u1 -> u2
 					// last u2 -> u0 -> u1 -> u2
+					// 在尾部插入新的更新需求
 					(newBaseQueueLast as Update<State>).next = clone;
 					newBaseQueueLast = clone;
 				}
 			} else {
-				// 优先级足够
+				// 如果存在更新要被跳过
 				if (newBaseQueueLast !== null) {
+					// 以被跳过的更新为首指针创建一个链表
 					const clone = createUpdate(pending.action, NoLane);
 					(newBaseQueueLast as Update<State>).next = clone;
 					newBaseQueueLast = clone;
 				}
 
+				// 优先级足够
+				// 如果有多个更新，则后面的更新会覆盖前面的更新
 				const action = pending.action;
 				if (action instanceof Function) {
 					newState = action(baseState);
@@ -127,13 +131,17 @@ export const processUpdateQueue = <State>(
 			pending = pending.next as Update<any>;
 		} while (pending !== first);
 		if (newBaseQueueLast === null) {
-			// 本次计算没有 update 被跳过
+			// 本次计算没有 update 被跳过，则这个 state 一定是最新的那个 state
 			newBaseState = newState;
 		} else {
+			// 首尾相连，形成环状链表
 			newBaseQueueLast.next = newBaseQueueFirst;
 		}
+		// 优先级足够的 state
 		result.memoizedState = newState;
+		// 优先级不够的 state
 		result.baseState = newBaseState;
+		// 指向队列最后一个元素，因为 newBaseQueueLast.next 为第一个元素
 		result.baseQueue = newBaseQueueLast;
 	}
 	return result;

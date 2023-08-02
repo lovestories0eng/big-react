@@ -118,10 +118,11 @@ export const createWorkInProgress = (
 	current: FiberNode,
 	pendingProps: Props
 ): FiberNode => {
+	// 指向被缓存的 FiberNode
 	let wip = current.alternate;
 
 	if (wip === null) {
-		// mount
+		// 缓存为空，mount
 		wip = new FiberNode(current.tag, pendingProps, current.key);
 		wip.stateNode = current.stateNode;
 		// 创建双缓存
@@ -135,6 +136,7 @@ export const createWorkInProgress = (
 		wip.subtreeFlags = NoFlags;
 		wip.deletions = null;
 	}
+	// 'div' App()
 	wip.type = current.type;
 	wip.updateQueue = current.updateQueue;
 	wip.child = current.child;
@@ -174,7 +176,9 @@ export function createFiberFromElement(element: ReactElementType) {
 	} else if (typeof type !== 'function' && __DEV__) {
 		console.warn('未定义的type类型', element);
 	}
+	// 取出 props，后面给 pendingProps 赋值
 	const fiber = new FiberNode(fiberTag, props, key);
+	// 对于一开始传入的 <App />，这里的 type 其实就是用于生成 JSX 的函数
 	fiber.type = type;
 	fiber.ref = ref;
 	return fiber;

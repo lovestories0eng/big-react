@@ -48,15 +48,19 @@ const RootCompleted = 2;
 
 // 初始化，将workInProgress 指向第一个fiberNode
 function prepareFreshStack(root: FiberRootNode, lane: Lane) {
+	// 初始化优先级为 0
 	root.finishedLane = NoLane;
 	root.finishedWork = null;
+	// 初始化 workInProgress 工作单元
 	workInProgress = createWorkInProgress(root.current, {});
 	wipRootRenderLane = lane;
 }
 
 export function scheduleUpdateOnFiber(fiber: FiberNode, lane: Lane) {
+	// 找到 FiberRootNode
 	const root = markUpdateFormFiberToRoot(fiber);
 	markRootUpdated(root, lane);
+	// 开始调度
 	ensureRootIsScheduled(root);
 }
 
@@ -168,7 +172,7 @@ function performConcurrentWorkOnRoot(
 			root.finishedLane = lane;
 			wipRootRenderLane = NoLane;
 
-			// wip fiberNode树 树中的flags
+			// wip fiberNode 树中的flags
 			commitRoot(root);
 		} else if (__DEV__) {
 			console.error('还未实现的并发更新结束状态');
@@ -182,10 +186,12 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
 	if (nextLane !== SyncLane) {
 		// 其它比SyncLane低的优先级
 		// NoLane
+		// 调度其他优先级更高的任务
 		ensureRootIsScheduled(root);
 		return;
 	}
 
+	// 进入 render 阶段
 	const exitStatus = renderRoot(root, nextLane, false);
 
 	// 如果 render 阶段完毕
@@ -214,6 +220,7 @@ function renderRoot(root: FiberRootNode, lane: Lane, shouldTimeSlice: boolean) {
 
 	do {
 		try {
+			// 同步任务或者并发任务
 			shouldTimeSlice ? workLoopConcurrent() : workLoopSync();
 			break;
 		} catch (e) {
@@ -262,6 +269,7 @@ function commitRoot(root: FiberRootNode) {
 		(finishedWork.flags & PassiveMask) !== NoFlags ||
 		(finishedWork.subtreeFlags & PassiveMask) !== NoFlags
 	) {
+		// useEffect 属于异步调度
 		if (!rootDoesHasPassiveEffect) {
 			rootDoesHasPassiveEffect = true;
 			// 调度副作用
@@ -324,6 +332,7 @@ function flushPassiveEffects(pendingPassiveEffects: PendingPassiveEffects) {
 // React 通过 DFS，首先根据头部节点找到对应的叶子节点
 function workLoopSync() {
 	while (workInProgress !== null) {
+		// 完成对单个 workInProgress 工作单元的处理
 		performUnitOfWork(workInProgress);
 	}
 }
@@ -344,6 +353,7 @@ function performUnitOfWork(fiber: FiberNode) {
 		// 没有子 fiber
 		completeUnitOfWork(fiber);
 	} else {
+		// 让 workInProgress 指向下一个工作单元
 		workInProgress = next;
 	}
 }
@@ -353,11 +363,13 @@ function completeUnitOfWork(fiber: FiberNode) {
 
 	do {
 		completeWork(node);
+		// 首先遍历兄弟节点
 		const sibling = node.sibling;
 		if (sibling !== null) {
 			workInProgress = sibling;
 			return;
 		}
+		// 遍历父节点
 		node = node.return;
 		workInProgress = node;
 	} while (node !== null);
