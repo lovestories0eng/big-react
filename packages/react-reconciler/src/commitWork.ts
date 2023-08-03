@@ -235,6 +235,7 @@ export const commitLayoutEffects = commitEffects(
 function safelyAttachRef(fiber: FiberNode) {
 	const ref = fiber.ref;
 	if (ref !== null) {
+		// 把 ref 指向 DOM 节点
 		const instance = fiber.stateNode;
 		if (typeof ref === 'function') {
 			ref(instance);

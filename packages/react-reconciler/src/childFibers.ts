@@ -142,8 +142,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		const existingChildren: ExistingChildren = new Map();
 		let current = currentFirstChild;
 		while (current !== null) {
-			// const keyToUse = current.key !== null ? current.key : current.index;
-			const keyToUse = getElementKeyToUse(current);
+			const keyToUse = current.key !== null ? current.key : current.index;
 			existingChildren.set(keyToUse, current);
 			current = current.sibling;
 		}

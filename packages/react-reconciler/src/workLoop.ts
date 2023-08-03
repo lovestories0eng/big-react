@@ -253,7 +253,6 @@ function commitRoot(root: FiberRootNode) {
 	if (__DEV__) {
 		console.warn('commit阶段开始', finishedWork);
 	}
-
 	const lane = root.finishedLane;
 
 	if (lane === NoLane && __DEV__) {

@@ -213,10 +213,11 @@ function createFCUpdateQueue<State>() {
 	return updateQueue;
 }
 
+// 在 setState 时执行
 function updateState<State>(): [State, Dispatch<State>] {
 	const hook = updateWorkInProgressHook();
 
-	// 计算新state的逻辑
+	// 计算新 state 的逻辑
 	const queue = hook.updateQueue as UpdateQueue<State>;
 	const baseState = hook.baseState;
 
@@ -259,6 +260,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 	return [hook.memoizedState, queue.dispatch as Dispatch<State>];
 }
 
+// 该函数在 useState 时执行
 function mountState<State>(
 	initialState: (() => State) | State
 ): [State, Dispatch<State>] {
@@ -294,6 +296,7 @@ function dispatchSetState<State>(
 ) {
 	const lane = requestUpdateLanes();
 	// 创建一个新的更新需求，这里如果有多个 setState，最终只会执行一次 setState
+	// 同步优先级使用微任务调度，因此多个 setState 只有最后一个是生效的
 	const update = createUpdate(action, lane);
 	// 把更新需求压入队列
 	enqueueUpdate(updateQueue, update);
@@ -306,9 +309,9 @@ function updateWorkInProgressHook(): Hook {
 	let nextCurrentHook: Hook | null;
 	if (currentHook === null) {
 		// 这是这个FC update时的第一个hook
-		const current = currentlyRenderingFiber?.alternate;
+		const current = (currentlyRenderingFiber as FiberNode).alternate;
 		if (current !== null) {
-			nextCurrentHook = current?.memoizedState;
+			nextCurrentHook = current.memoizedState;
 		} else {
 			// mount
 			nextCurrentHook = null;
