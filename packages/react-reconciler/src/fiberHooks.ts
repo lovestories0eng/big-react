@@ -21,11 +21,13 @@ let currentlyRenderingFiber: FiberNode | null = null;
 // 链表结构，把所有的 Hooks 串到一个链表上面
 let workInProgressHook: Hook | null = null;
 let currentHook: Hook | null = null;
+// 当前函数组件 render 的优先级
 let renderLane: Lane = NoLane;
 
 const { currentDispatcher } = internals;
 
 interface Hook {
+	// Hook 中的 memoizedState 指的是 setState 中的参数
 	memoizedState: any;
 	updateQueue: unknown;
 	next: Hook | null;
@@ -70,7 +72,7 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
 	// 这里的属性在 createFiberFormElement 中得到
 	const Component = wip.type;
 	const props = wip.pendingProps;
-	// 执行函数，得到 JSX 对象
+	// 执行函数，得到 JSX 对象x
 	const children = Component(props);
 
 	// 重置操作
@@ -285,6 +287,7 @@ function mountState<State>(
 	hook.baseState = memoizedState;
 
 	// @ts-ignore
+	// 将 dispatchSetState 绑定到 useState 返回的结果中，在 updateState 时可以进行相关的调用
 	const dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, queue);
 	queue.dispatch = dispatch;
 

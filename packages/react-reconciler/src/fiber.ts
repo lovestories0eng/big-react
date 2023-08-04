@@ -40,6 +40,13 @@ export class FiberNode {
 	// 正在工作的属性
 	memoizedProps: Props | null;
 	memoizedState: any;
+	/**
+	 * 双缓存技术：
+	 * 当所有的 ReactElement 比较完后，会生成一颗 FiberNode Tree，一共会存在两颗 FiberNode Tree
+	 * current: 与视图中真实 UI 对应的 FiberNode 树
+	 * workInProgress: 触发更新后，正在 reconciler 中计算的 FiberNode Tree
+	 * （用于下一次的视图更新，在下一次视图更新后，会变成 current Tree）
+	 */
 	// 双缓存树指向（workInProgress 和 current 切换）
 	alternate: FiberNode | null;
 
@@ -98,6 +105,7 @@ export class FiberRootNode {
 
 	constructor(container: Container, hostRootFiber: FiberNode) {
 		this.container = container;
+		// FiberRootNode 的 current 指针一开始指向 hostRootFiber
 		this.current = hostRootFiber;
 		hostRootFiber.stateNode = this;
 		this.finishedWork = null;

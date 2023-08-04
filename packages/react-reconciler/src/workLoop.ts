@@ -36,7 +36,7 @@ import { flushSyncCallbacks, scheduleSyncCallback } from './syncTaskQueue';
 import { scheduleMicroTask } from 'hostConfig';
 import { HookHasEffect, Passive } from './hookEffectTags';
 
-// 表示当前正在调和的 fiber 节点，之后简称 wip
+// 正在内存中构建的 Fiber 树，表示当前正在调和的 fiber 节点，之后简称 wip
 let workInProgress: FiberNode | null = null;
 let wipRootRenderLane: Lane = NoLane;
 let rootDoesHasPassiveEffect = false;
@@ -51,7 +51,7 @@ function prepareFreshStack(root: FiberRootNode, lane: Lane) {
 	// 初始化优先级为 0
 	root.finishedLane = NoLane;
 	root.finishedWork = null;
-	// 初始化 workInProgress 工作单元
+	// 初始化 workInProgress 工作单元: workInProgress = roor.current.alternate
 	workInProgress = createWorkInProgress(root.current, {});
 	wipRootRenderLane = lane;
 }
@@ -168,6 +168,7 @@ function performConcurrentWorkOnRoot(
 	if (exitStatus === RootCompleted) {
 		if (exitStatus === RootCompleted) {
 			// 使用双缓存机制，更新 root.current.alternate 而不直接更新 root.current
+			// 由 prepareFreshStack 可知，root.current.alternate 即为一开始的 workInProgress
 			const finishedWork = root.current.alternate;
 			root.finishedWork = finishedWork;
 			root.finishedLane = lane;
@@ -290,7 +291,9 @@ function commitRoot(root: FiberRootNode) {
 		// beforeMutation
 		// mutation Placement
 		commitMutationEffects(finishedWork, root);
-		// 在 mutation 之后，更新 root.current
+		// 在 mutation 渲染完成之后，更新 root.current
+		// 这里的 finishedWork 本质上是 root.current.alternate，也就是一开始的 workInProgress
+		// 这里其实就是缓存的更新了
 		root.current = finishedWork;
 		// layout
 		commitLayoutEffects(finishedWork, root);

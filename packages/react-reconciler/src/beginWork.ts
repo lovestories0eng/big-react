@@ -267,6 +267,7 @@ function updateContextProvider(wip: FiberNode) {
 }
 
 function reconcileChildren(wip: FiberNode, children?: ReactElementType) {
+	// 取出 alternate 缓存对其进行操作，不对 workInProgress 直接操作
 	const current = wip.alternate;
 
 	if (current !== null) {

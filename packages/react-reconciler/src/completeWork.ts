@@ -31,7 +31,7 @@ function markRef(fiber: FiberNode) {
 // 在 update 时标记 Update (属性更新）、执行 flags 冒泡
 export const completeWork = (wip: FiberNode) => {
 	const newProps = wip.pendingProps;
-	// 取出缓存数据
+	// 取出 workInProgress 中的缓存数据，开始真正的渲染
 	const current = wip.alternate;
 
 	switch (wip.tag) {

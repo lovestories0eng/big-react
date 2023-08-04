@@ -60,7 +60,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 						// type相同
 						const existing = useFiber(currentFiber, props);
 						existing.return = returnFiber;
-						// 当前节点可复用，标记剩下的节点删除
+						// 当前节点可复用，由于当前的 case 是 reconcileSingleElement，只有一个元素，因此标记剩下的节点删除
 						deleteRemainingChildren(returnFiber, currentFiber.sibling);
 						return existing;
 					}
@@ -80,7 +80,7 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 			}
 		}
 
-		// 创建
+		// 创建 fiberNode 并建立父子关系
 		let fiber;
 		if (element.type === REACT_FRAGMENT_TYPE) {
 			fiber = createFiberFromFragment(element.props.children, key);
