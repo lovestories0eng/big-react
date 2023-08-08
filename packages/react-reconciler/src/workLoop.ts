@@ -52,6 +52,11 @@ function prepareFreshStack(root: FiberRootNode, lane: Lane) {
 	root.finishedLane = NoLane;
 	root.finishedWork = null;
 	// 初始化 workInProgress 工作单元: workInProgress = roor.current.alternate
+	/**
+	 * 在更新时，workInProgress 重新指向 root.current.alternate
+	 * 需要注意 此时 root.current.alternate 其实就是最初的 workInProgress
+	 * 工作单元 workInProgress 会来回切换，用于进行 diff
+	 */
 	workInProgress = createWorkInProgress(root.current, {});
 	wipRootRenderLane = lane;
 }

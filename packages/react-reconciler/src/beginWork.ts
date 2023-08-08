@@ -228,7 +228,11 @@ function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
 function updateHostRoot(wip: FiberNode, renderLane: Lane) {
 	const baseState = wip.memoizedState;
 	const updateQueue = wip.updateQueue as UpdateQueue<Element>;
-	// 获取之前的更新队列
+	/**
+	 * 获取更新队列
+	 * 初始化时
+	 * setState 时
+	 */
 	const pending = updateQueue.shared.pending;
 	updateQueue.shared.pending = null;
 	// 最新状态
@@ -267,11 +271,14 @@ function updateContextProvider(wip: FiberNode) {
 }
 
 function reconcileChildren(wip: FiberNode, children?: ReactElementType) {
-	// 取出 alternate 缓存对其进行操作，不对 workInProgress 直接操作
+	// 再次取出 alternate 缓存对其进行操作，不对 workInProgress 直接操作
 	const current = wip.alternate;
 
 	if (current !== null) {
-		// update
+		/**
+		 * update
+		 * 在 update 时，current.child 会与 children 进行 diff
+		 */
 		wip.child = reconcileChildFibers(wip, current?.child, children);
 	} else {
 		// mount
