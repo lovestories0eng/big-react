@@ -353,12 +353,28 @@ function workLoopConcurrent() {
 	}
 }
 
+/**
+ * "归" 阶段会调用completeWork方法处理fiberNode。
+ * 当某个fiberNode执行完complete方法后，
+ * 如果其存在兄弟fiberNode（fiberNode.sibling !== null），会进入其兄弟fiber的"递阶段"。
+ * 如果不存在兄弟fiberNode，会进入父fiberNode的 "归" 阶段。
+ * 递阶段和归阶段会交错执行直至HostRootFiber的"归"阶段。
+ * 到此，render阶段的工作就结束了。
+ *
+ */
 function performUnitOfWork(fiber: FiberNode) {
-	// next 是 fiber 的子 fiber 或者是 null
+	/**
+	 * 根据传入的fiberNode创建下一级fiberNode
+	 * next 是 fiber 的子 fiber 或者是 null
+	 */
 	const next = beginWork(fiber, wipRootRenderLane);
 	// 工作完成，需要将 pendingProps 复制给已经渲染的 props
 	fiber.memoizedProps = fiber.pendingProps;
 
+	/**
+	 * 当遍历到叶子元素（不包含子 fiberNode）时
+	 * performUnitOfWork 就会进入从下往上遍历的阶段(completeWork)。
+	 */
 	if (next === null) {
 		// 没有子 fiber
 		completeUnitOfWork(fiber);
