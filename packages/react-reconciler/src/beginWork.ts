@@ -271,7 +271,11 @@ function updateContextProvider(wip: FiberNode) {
 }
 
 function reconcileChildren(wip: FiberNode, children?: ReactElementType) {
-	// 再次取出 alternate 缓存对其进行操作，不对 workInProgress 直接操作
+	/**
+	 * 再次取出 alternate 缓存对其进行操作，不对 workInProgress 直接操作
+	 * 这里 alternate 代表的 FiberNode 是已经渲染到了浏览器上面的
+	 * children 代表新的 FiberNode 节点，在后续会与已经渲染的 FiberNode 节点进行 diff
+	 */
 	const current = wip.alternate;
 
 	if (current !== null) {
