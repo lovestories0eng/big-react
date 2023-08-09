@@ -405,6 +405,7 @@ function mountWorkInProgressHook(): Hook {
 			throw new Error('请在函数组件内调用hook');
 		} else {
 			workInProgressHook = hook;
+			// 把当前的第一个 hook 赋值到 currentlyRenderingFiber.memoizedState 上
 			currentlyRenderingFiber.memoizedState = workInProgressHook;
 		}
 	} else {
