@@ -27,7 +27,10 @@ let renderLane: Lane = NoLane;
 const { currentDispatcher } = internals;
 
 interface Hook {
-	// Hook 中的 memoizedState 指的是 setState 中的参数
+	/**
+	 * Hook 中的 memoizedState 指的是 setState 中的参数
+	 * 同时也是在下一次更新前所存储的之前状态数据
+	 */
 	memoizedState: any;
 	updateQueue: unknown;
 	next: Hook | null;
@@ -224,11 +227,17 @@ function updateState<State>(): [State, Dispatch<State>] {
 	const baseState = hook.baseState;
 
 	const pending = queue.shared.pending;
+	// 在 updateWorkInProgress 中有给 currentHook 赋值
 	const current = currentHook as Hook;
 	let baseQueue = current.baseQueue;
 	if (pending !== null) {
-		// pending baseQueue update 保存在 current 中
+		/**
+		 * pending baseQueue update 保存在 current 中
+		 * baseQueue 一开始赋值为 null
+		 * 由于有其他优先级更高的任务存在，可能导致当前的 baseQueue 没有更新完因而不为 null
+		 */
 		if (baseQueue !== null) {
+			// 合并 baseQueue 与 pendingQueue
 			// baseQueue b2 -> b0 -> b1 -> b2
 			// pendingQueue p2 -> p0 -> p1 -> p2
 			// b0
@@ -245,6 +254,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 		baseQueue = pending;
 		// 保存在 current 中
 		current.baseQueue = pending;
+		// 回收空间，防止内存泄漏
 		queue.shared.pending = null;
 	}
 
@@ -260,7 +270,10 @@ function updateState<State>(): [State, Dispatch<State>] {
 		hook.baseQueue = newBaseQueue;
 	}
 
-	// 这里的 queue.dispatch 本质上就是 disPatchSetState
+	/**
+	 * 这里的 queue.dispatch 本质上就是 disPatchSetState
+	 * 返回的 hook.memoizedState，是上次同步任务 setState 后计算出来的新的 state
+	 */
 	return [hook.memoizedState, queue.dispatch as Dispatch<State>];
 }
 
@@ -268,7 +281,10 @@ function updateState<State>(): [State, Dispatch<State>] {
 function mountState<State>(
 	initialState: (() => State) | State
 ): [State, Dispatch<State>] {
-	// 创建当前 useState 对应的 hook 数据
+	/**
+	 * 创建当前 useState 对应的 hook 数据
+	 * 这里将 currentlyRenderingFiber.memoizedState 的值赋为了当前 React Hook 对应的更新链表的首指针
+	 */
 	const hook = mountWorkInProgressHook();
 
 	let memoizedState;
@@ -288,8 +304,11 @@ function mountState<State>(
 	// 这里是初始时 useState 的参数
 	hook.baseState = memoizedState;
 
+	/**
+	 * 将 dispatchSetState 绑定到 useState 返回的结果中，在 updateState 时可以进行相关的调用
+	 * 这里将 dispatchSetState 与 currentlyRenderingFiber 与 queue 绑定，确保其后续能够获得更新队列
+	 */
 	// @ts-ignore
-	// 将 dispatchSetState 绑定到 useState 返回的结果中，在 updateState 时可以进行相关的调用
 	const dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, queue);
 	queue.dispatch = dispatch;
 
@@ -306,6 +325,7 @@ function dispatchSetState<State>(
 	// 创建一个新的更新需求，这里如果有多个 setState，最终只会执行一次 setState
 	// 同步优先级使用微任务调度，因此多个 setState 只有最后一个是生效的
 	const update = createUpdate(action, lane);
+
 	// 把更新需求压入队列
 	enqueueUpdate(updateQueue, update);
 	// 重新进行调度，这里的 fiber 为 currentlyRenderingFiber，即正在 render 的函数组件
@@ -317,7 +337,7 @@ function updateWorkInProgressHook(): Hook {
 	let nextCurrentHook: Hook | null;
 	if (currentHook === null) {
 		/**
-		 * 这是这个 FC update 时的第一个 hook
+		 * 这是 FC update 时的第一个 hook
 		 * currentlyRenderingFier 代表当前的 workInProgress
 		 * currentlyRenderingFiber.alternate 代表已经渲染到浏览器上面的函数组件，即 renderWithHooks 的 current
 		 */
@@ -326,11 +346,13 @@ function updateWorkInProgressHook(): Hook {
 			/**
 			 * update
 			 * 这里其实就是拿到 dispatchSetState 的更新队列
-			 * 在 createWorkInProgress 时，已经更新了 memoizedState
 			 */
 			nextCurrentHook = current.memoizedState;
 		} else {
-			// current === null，则代表函数组件第一次 mount
+			/**
+			 * current === null，则代表函数组件第一次 mount
+			 * 但由于这是 updateWorkInProgressHook，因此 current 不应该也不可能等于 null
+			 */
 			nextCurrentHook = null;
 		}
 	} else {
@@ -401,6 +423,12 @@ function startTransition(setPending: Dispatch<boolean>, callback: () => void) {
 	currentBatchConfig.transition = prevTransition;
 }
 
+/**
+ * hook: 代表一个 React Hook
+ * updateQueue: 代表一个更新队列，比如在一个同步任务中对此 setState
+ * hook 是一个链表，串联起一个个 React Hook
+ * 同时 updateQueue 也是链表，串联起在同步任务中多次进行的 setState
+ */
 function mountWorkInProgressHook(): Hook {
 	// 创建一个新的 hook
 	const hook: Hook = {
@@ -411,13 +439,17 @@ function mountWorkInProgressHook(): Hook {
 		baseState: null
 	};
 
+	// mount时 第一个hook
 	if (workInProgressHook === null) {
-		// mount时 第一个hook
 		if (currentlyRenderingFiber === null) {
 			throw new Error('请在函数组件内调用hook');
 		} else {
 			workInProgressHook = hook;
-			// 把当前的第一个 hook 赋值到 currentlyRenderingFiber.memoizedState 上
+			/**
+			 * 把当前的第一个 hook 赋值到 currentlyRenderingFiber.memoizedState 上
+			 * 如果多次进行 setState 操作，则 currentlyRenderingFiber.memoizedState 最终会成为一条循环链表
+			 * 这样就将一个函数组件中用到的多个 React Hook 串联有序执行
+			 */
 			currentlyRenderingFiber.memoizedState = workInProgressHook;
 		}
 	} else {

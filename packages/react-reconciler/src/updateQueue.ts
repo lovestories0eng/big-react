@@ -64,12 +64,18 @@ export const enqueueUpdate = <State>(
 	// pending = c -> a -> b -> c
 };
 
+/**
+ * 处理更新队列，计算最终值
+ * 兼顾更新的连续性与更新的优先级
+ */
 export const processUpdateQueue = <State>(
 	baseState: State,
 	pendingUpdate: Update<State> | null,
 	renderLane: Lane
 ): {
+	// 上次更新计算的最终 state
 	memoizedState: State;
+	// 本次更新参与计算的初始 state
 	baseState: State;
 	baseQueue: Update<State> | null;
 } => {
@@ -79,7 +85,7 @@ export const processUpdateQueue = <State>(
 		baseQueue: null
 	};
 	if (pendingUpdate !== null) {
-		// 第一个 update
+		// 第一个 update，由于首指针指向的是循环链表的最后一个元素，因此要取 next。
 		const first = pendingUpdate.next;
 		let pending = pendingUpdate.next as Update<any>;
 
@@ -113,7 +119,10 @@ export const processUpdateQueue = <State>(
 			} else {
 				// 如果存在更新要被跳过
 				if (newBaseQueueLast !== null) {
-					// 以被跳过的更新为首指针创建一个链表
+					/**
+					 * 以被跳过的更新为首指针创建一个链表
+					 * 前面已有更新被跳过，但依然参与计算，优先级降低为 NoLane，这样一定会参与下一次的计算
+					 */
 					const clone = createUpdate(pending.action, NoLane);
 					(newBaseQueueLast as Update<State>).next = clone;
 					newBaseQueueLast = clone;
@@ -123,6 +132,10 @@ export const processUpdateQueue = <State>(
 				// 如果有多个更新，则后面的更新会覆盖前面的更新
 				const action = pending.action;
 				if (action instanceof Function) {
+					/**
+					 * 例如: setNum(num => num + 1)
+					 * 这里的 num 是形参，最终的实参是 baseState
+					 */
 					newState = action(baseState);
 				} else {
 					newState = action;
