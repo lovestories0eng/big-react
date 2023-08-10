@@ -51,8 +51,8 @@ function prepareFreshStack(root: FiberRootNode, lane: Lane) {
 	// 初始化优先级为 0
 	root.finishedLane = NoLane;
 	root.finishedWork = null;
-	// 初始化 workInProgress 工作单元: workInProgress = roor.current.alternate
 	/**
+	 * 初始化 workInProgress 工作单元: workInProgress = roor.current.alternate
 	 * 在更新时，workInProgress 重新指向 root.current.alternate
 	 * 需要注意 此时 root.current.alternate 其实就是最初的 workInProgress
 	 * 工作单元 workInProgress 会来回切换，用于进行 diff
@@ -354,12 +354,12 @@ function workLoopConcurrent() {
 }
 
 /**
- * "归" 阶段会调用completeWork方法处理fiberNode。
- * 当某个fiberNode执行完complete方法后，
- * 如果其存在兄弟fiberNode（fiberNode.sibling !== null），会进入其兄弟fiber的"递阶段"。
- * 如果不存在兄弟fiberNode，会进入父fiberNode的 "归" 阶段。
- * 递阶段和归阶段会交错执行直至HostRootFiber的"归"阶段。
- * 到此，render阶段的工作就结束了。
+ * "归" 阶段会调用 completeWork 方法处理 fiberNode。
+ * 当某个 fiberNode 执行完 complete 方法后，
+ * 如果其存在兄弟 fiberNode（fiberNode.sibling !== null），会进入其兄弟 fiber 的"递阶段"。
+ * 如果不存在兄弟 fiberNode，会进入父 fiberNode 的 "归" 阶段。
+ * 递阶段和归阶段会交错执行直至 HostRootFiber 的"归"阶段。
+ * 到此，render 阶段的工作就结束了。
  *
  */
 function performUnitOfWork(fiber: FiberNode) {

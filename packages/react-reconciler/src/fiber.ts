@@ -149,8 +149,9 @@ export const createWorkInProgress = (
 	wip.updateQueue = current.updateQueue;
 	wip.child = current.child;
 
-	// 数据
+	// 更新数据
 	wip.memoizedProps = current.memoizedProps;
+	// 更新需要的更新
 	wip.memoizedState = current.memoizedState;
 	wip.ref = current.ref;
 

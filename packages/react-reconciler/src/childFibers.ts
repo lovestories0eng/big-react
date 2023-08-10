@@ -321,8 +321,11 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 }
 
 function useFiber(fiber: FiberNode, pendingProps: Props): FiberNode {
-	// 如果 fiber 能重复利用，则使用 createWorkInProgress 创建出新的 FiberNode
-	// 如果当前的 FiberNode.alternate 为 null，则会创建缓存 alternate 并互指
+	/**
+	 * 如果 fiber 能重复利用，则使用 createWorkInProgress 创建出新的 FiberNode
+	 * 如果当前的 FiberNode.alternate 为 null，则会创建缓存 alternate 并互指
+	 * 这里 clone 会指向 fiber.alternate，对其进行调和
+	 */
 	const clone = createWorkInProgress(fiber, pendingProps);
 	clone.index = 0;
 	clone.sibling = null;

@@ -16,7 +16,7 @@ import { Lane, NoLane, requestUpdateLanes } from './fiberLanes';
 import { Flags, PassiveEffect } from './fiberFlags';
 import { HookHasEffect, Passive } from './hookEffectTags';
 
-// 正在 render 的函数组件
+// 正在 render 的函数组件，即 workInProgress
 let currentlyRenderingFiber: FiberNode | null = null;
 // 链表结构，把所有的 Hooks 串到一个链表上面
 let workInProgressHook: Hook | null = null;
@@ -59,7 +59,7 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
 	wip.updateQueue = null;
 	renderLane = lane;
 
-	// 生成双缓存
+	// 双缓存机制，拿到已经渲染到浏览器中的 FiberNode
 	const current = wip.alternate;
 	if (current !== null) {
 		// update
@@ -254,11 +254,13 @@ function updateState<State>(): [State, Dispatch<State>] {
 			baseQueue: newBaseQueue,
 			baseState: newBaseState
 		} = processUpdateQueue(baseState, baseQueue, renderLane);
+		// 拿到计算完的 memoizedState
 		hook.memoizedState = memoizedState;
 		hook.baseState = newBaseState;
 		hook.baseQueue = newBaseQueue;
 	}
 
+	// 这里的 queue.dispatch 本质上就是 disPatchSetState
 	return [hook.memoizedState, queue.dispatch as Dispatch<State>];
 }
 
@@ -266,7 +268,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 function mountState<State>(
 	initialState: (() => State) | State
 ): [State, Dispatch<State>] {
-	// 找到当前 useState 对应的 hook 数据
+	// 创建当前 useState 对应的 hook 数据
 	const hook = mountWorkInProgressHook();
 
 	let memoizedState;
@@ -311,19 +313,28 @@ function dispatchSetState<State>(
 }
 
 function updateWorkInProgressHook(): Hook {
-	// render阶段触发的更新
+	// render 阶段触发的更新
 	let nextCurrentHook: Hook | null;
 	if (currentHook === null) {
-		// 这是这个 FC update 时的第一个 hook
+		/**
+		 * 这是这个 FC update 时的第一个 hook
+		 * currentlyRenderingFier 代表当前的 workInProgress
+		 * currentlyRenderingFiber.alternate 代表已经渲染到浏览器上面的函数组件，即 renderWithHooks 的 current
+		 */
 		const current = (currentlyRenderingFiber as FiberNode).alternate;
 		if (current !== null) {
+			/**
+			 * update
+			 * 这里其实就是拿到 dispatchSetState 的更新队列
+			 * 在 createWorkInProgress 时，已经更新了 memoizedState
+			 */
 			nextCurrentHook = current.memoizedState;
 		} else {
-			// mount
+			// current === null，则代表函数组件第一次 mount
 			nextCurrentHook = null;
 		}
 	} else {
-		// 这个FC update时 后续的hook
+		// 这个 FC update 时 后续的hook
 		nextCurrentHook = currentHook.next;
 	}
 
@@ -351,6 +362,7 @@ function updateWorkInProgressHook(): Hook {
 			throw new Error('请在函数组件内调用hook');
 		} else {
 			workInProgressHook = newHook;
+			// currentlyRenderingFiber 指向 第一个 hook
 			currentlyRenderingFiber.memoizedState = workInProgressHook;
 		}
 	} else {
@@ -409,7 +421,10 @@ function mountWorkInProgressHook(): Hook {
 			currentlyRenderingFiber.memoizedState = workInProgressHook;
 		}
 	} else {
-		// mount时 后续的hook
+		/**
+		 * mount 时后续的 hook，创建出一个链表
+		 * workInProgreeHook 指向链表的最后一个元素
+		 */
 		workInProgressHook.next = hook;
 		workInProgressHook = hook;
 	}
