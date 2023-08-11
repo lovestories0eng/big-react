@@ -1,5 +1,6 @@
 import './style.css';
 
+// https://juejin.cn/post/7094922406451478564?searchId=20230811153852ED78E2CE581D57D60F62
 const root = document.querySelector('#root');
 import {
 	unstable_ImmediatePriority as ImmerdiatelyPriority,
@@ -15,11 +16,11 @@ import {
 } from 'scheduler';
 
 type Priority =
-	| typeof ImmerdiatelyPriority
-	| typeof UserBlockingPriority
-	| typeof NormalPriority
-	| typeof LowPriority
-	| typeof IdlePriority;
+	| typeof ImmerdiatelyPriority // 1 同步更新
+	| typeof UserBlockingPriority // 2
+	| typeof NormalPriority // 3
+	| typeof LowPriority // 4
+	| typeof IdlePriority; // 5
 
 interface Work {
 	count: number;
@@ -27,7 +28,9 @@ interface Work {
 }
 
 const workList: Work[] = [];
+// 本次调度任务进行时，正在执行的调度的优先级默认是空闲优先级
 let prevPriority: Priority = IdlePriority;
+// 全局创建当前被调度的回调函数
 let curCallback: CallbackNode | null = null;
 
 [
@@ -56,6 +59,7 @@ let curCallback: CallbackNode | null = null;
 
 function schedule() {
 	const cbNode = getFirstCallbackNode();
+	// 找到最高优先级 work
 	const curWork = workList.sort((w1, w2) => w1.priority - w2.priority)[0];
 
 	// 策略逻辑
@@ -93,11 +97,13 @@ function perform(work: Work, didTimeout?: boolean) {
 
 	if (!work.count) {
 		const workIndex = workList.indexOf(work);
+		// 任务做完，把 work 从 workList 中剔除
 		workList.splice(workIndex, 1);
 		prevPriority = IdlePriority;
 	}
 
 	const prevCallback = curCallback;
+	// 继续调度
 	schedule();
 	const newCallback = curCallback;
 

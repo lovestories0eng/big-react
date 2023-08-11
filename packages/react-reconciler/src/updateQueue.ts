@@ -97,13 +97,13 @@ export const processUpdateQueue = <State>(
 		do {
 			const updateLane = pending.lane;
 			if (!isSubsetOfLanes(renderLane, updateLane)) {
-				// 优先级不够 被跳过
+				// 优先级不够，被跳过
 				const clone = createUpdate(pending.action, pending.lane);
-				// 是不是第一个被跳过的
 				if (newBaseQueueFirst === null) {
 					// first u0 last u0
 					newBaseQueueFirst = clone;
 					newBaseQueueLast = clone;
+					// newBaseState 被赋值为 上一次计算出的 newState
 					newBaseState = newState;
 				} else {
 					// first u0 -> u1
@@ -117,18 +117,18 @@ export const processUpdateQueue = <State>(
 					newBaseQueueLast = clone;
 				}
 			} else {
-				// 如果存在更新要被跳过
+				// 优先级足够
+				// 如果存在更新被跳过的情况
 				if (newBaseQueueLast !== null) {
 					/**
 					 * 以被跳过的更新为首指针创建一个链表
-					 * 前面已有更新被跳过，但依然参与计算，优先级降低为 NoLane，这样一定会参与下一次的计算
+					 * 前面已有更新被跳过，但依然参与计算，优先级变为 NoLane，这样一定会参与下一次的计算
 					 */
 					const clone = createUpdate(pending.action, NoLane);
 					(newBaseQueueLast as Update<State>).next = clone;
 					newBaseQueueLast = clone;
 				}
 
-				// 优先级足够
 				// 如果有多个更新，则后面的更新会覆盖前面的更新
 				const action = pending.action;
 				if (action instanceof Function) {
@@ -159,3 +159,18 @@ export const processUpdateQueue = <State>(
 	}
 	return result;
 };
+
+/**
+ * {
+ *   action: (num) => num + 1,
+ *   lane: DefaultLane
+ * },
+ * {
+ *   action: 3,
+ *   lane: SyncLane
+ * },
+ * {
+ *   action: (num) => num + 10,
+ *   lane: DefaultLane
+ * }
+ */
