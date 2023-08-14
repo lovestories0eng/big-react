@@ -235,7 +235,7 @@ function updateHostRoot(wip: FiberNode, renderLane: Lane) {
 	 */
 	const pending = updateQueue.shared.pending;
 	updateQueue.shared.pending = null;
-	// 最新状态
+	// 最新状态，这里的 processUpdateQueue 保证 baseQueue 被消费
 	const { memoizedState } = processUpdateQueue(baseState, pending, renderLane);
 	// 其实就是传入的 element <App />
 	wip.memoizedState = memoizedState;

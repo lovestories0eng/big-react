@@ -191,9 +191,9 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
 	const nextLane = getHighestPriorityLane(root.pendingLanes);
 
 	if (nextLane !== SyncLane) {
-		// 其它比SyncLane低的优先级
+		// 非 SyncLane 的优先级
 		// NoLane
-		// 调度其他优先级更高的任务
+		// 调度其他优先级任务
 		ensureRootIsScheduled(root);
 		return;
 	}
@@ -208,7 +208,7 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
 		root.finishedLane = nextLane;
 		wipRootRenderLane = NoLane;
 
-		// wip fiberNode树 树中的flags执行对应的操作
+		// wip fiberNode树 树中的 flags 执行对应的操作
 		commitRoot(root);
 	} else if (__DEV__) {
 		console.error('还未实现的同步更新结束状态');

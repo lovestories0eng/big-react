@@ -67,6 +67,9 @@ export const enqueueUpdate = <State>(
 /**
  * 处理更新队列，计算最终值
  * 兼顾更新的连续性与更新的优先级
+ * 高优先级任务打断低优先级任务之后，不以低优先级任务计算得到的 baseState 做计算
+ * 低优先级任务重启后，不能覆盖高优先级任务计算得到的值
+ * 且需要根据低优先级任务计算得到的 newState，作为高优先级的 baseState 再去执行一次高优先级任务
  */
 export const processUpdateQueue = <State>(
 	baseState: State,

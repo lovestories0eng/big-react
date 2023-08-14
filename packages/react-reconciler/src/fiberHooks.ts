@@ -235,6 +235,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 		 * pending baseQueue update 保存在 current 中
 		 * baseQueue 一开始赋值为 null
 		 * 由于有其他优先级更高的任务存在，可能导致当前的 baseQueue 没有更新完因而不为 null
+		 * 由于进行几次 setState 就会进行几次 scheduleFiberOnUpdate，因此会确保清空 baseQueue
 		 */
 		if (baseQueue !== null) {
 			// 合并 baseQueue 与 pendingQueue
@@ -272,7 +273,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 
 	/**
 	 * 这里的 queue.dispatch 本质上就是 disPatchSetState
-	 * 返回的 hook.memoizedState，是上次同步任务 setState 后计算出来的新的 state
+	 * 返回的 hook.memoizedState，是上次任务 setState 后计算出来的新的 state
 	 */
 	return [hook.memoizedState, queue.dispatch as Dispatch<State>];
 }
