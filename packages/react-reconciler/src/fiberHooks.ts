@@ -75,7 +75,7 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
 	// 这里的属性在 createFiberFormElement 中得到
 	const Component = wip.type;
 	const props = wip.pendingProps;
-	// 执行函数，得到 JSX 对象x
+	// 执行函数，得到 JSX 对象
 	const children = Component(props);
 
 	// 重置操作
@@ -218,7 +218,7 @@ function createFCUpdateQueue<State>() {
 	return updateQueue;
 }
 
-// 在 setState 时执行
+// 在函数组件更新时执行
 function updateState<State>(): [State, Dispatch<State>] {
 	const hook = updateWorkInProgressHook();
 
@@ -235,7 +235,7 @@ function updateState<State>(): [State, Dispatch<State>] {
 		 * pending baseQueue update 保存在 current 中
 		 * baseQueue 一开始赋值为 null
 		 * 由于有其他优先级更高的任务存在，可能导致当前的 baseQueue 没有更新完因而不为 null
-		 * 由于进行几次 setState 就会进行几次 scheduleFiberOnUpdate，因此会确保清空 baseQueue
+		 * 优先级不同，多次调用 processUpdateQueue
 		 */
 		if (baseQueue !== null) {
 			// 合并 baseQueue 与 pendingQueue

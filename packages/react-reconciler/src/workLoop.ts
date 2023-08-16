@@ -86,6 +86,7 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 	const curPriority = updateLane;
 	const prevPriority = root.callbackPriority;
 
+	// 如果最新任务的优先级和当前执行的任务优先级一样就没必要打断当前执行的
 	if (curPriority === prevPriority) {
 		return;
 	}
@@ -108,9 +109,9 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 		scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
 		scheduleMicroTask(flushSyncCallbacks);
 	} else {
-		// 其他优先级 用宏任务调度
 		const schedulerPriority = lanesToSchedulerPriority(updateLane);
 
+		// 其他优先级，用宏任务调度
 		newCallbackNode = scheduleCallback(
 			schedulerPriority,
 			// @ts-ignore
@@ -125,7 +126,7 @@ function markRootUpdated(root: FiberRootNode, lane: Lane) {
 	root.pendingLanes = mergeLanes(root.pendingLanes, lane);
 }
 
-// scheduleUpdateOnFiber主要是找到hostFiberNode, 然后开始reconciler过程
+// scheduleUpdateOnFiber 主要是找到 hostFiberNode, 然后开始 reconciler 过程
 function markUpdateFormFiberToRoot(fiber: FiberNode) {
 	let node = fiber;
 	let parent = node.return;
@@ -168,6 +169,12 @@ function performConcurrentWorkOnRoot(
 		if (root.callbackNode !== curCallbackNode) {
 			return null;
 		}
+		/**
+		 * You might wonder if a task is interrupted by shouldYield(),
+		 * how would it resume? Yes, this is the answer.
+		 * Scheduler looks at the return value of task callback to see if there is continuation,
+		 * the return value is kind of rescheduling.
+		 */
 		return performConcurrentWorkOnRoot.bind(null, root);
 	}
 	if (exitStatus === RootCompleted) {

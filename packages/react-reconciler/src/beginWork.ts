@@ -222,9 +222,8 @@ function updateFunctionComponent(wip: FiberNode, renderLane: Lane) {
 }
 
 /**
- * @description 取出 memoizedState，并根据 memoizedState 创建 FiberNode
-	processUpdateQueue： 是根据不同的类型（函数和其他）生成memoizedState
-*/
+ * @description 取出 memoizedState，并根据 memoizedState 创建 FiberNode，processUpdateQueue： 是根据不同的类型（函数和其他）生成memoizedState
+ */
 function updateHostRoot(wip: FiberNode, renderLane: Lane) {
 	const baseState = wip.memoizedState;
 	const updateQueue = wip.updateQueue as UpdateQueue<Element>;
@@ -235,7 +234,6 @@ function updateHostRoot(wip: FiberNode, renderLane: Lane) {
 	 */
 	const pending = updateQueue.shared.pending;
 	updateQueue.shared.pending = null;
-	// 最新状态，这里的 processUpdateQueue 保证 baseQueue 被消费
 	const { memoizedState } = processUpdateQueue(baseState, pending, renderLane);
 	// 其实就是传入的 element <App />
 	wip.memoizedState = memoizedState;
