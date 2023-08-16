@@ -75,6 +75,7 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 	const existingCallback = root.callbackNode;
 
 	if (updateLane === NoLane) {
+		// 当最高优先级为 NoLane 时，取消当前的任务
 		if (existingCallback !== null) {
 			unstable_cancelCallback(existingCallback);
 		}
@@ -96,7 +97,6 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 	}
 
 	let newCallbackNode = null;
-
 	if (__DEV__) {
 		console.log(
 			`在${updateLane === SyncLane ? '微' : '宏'}微任务中调度，优先级：`,
@@ -111,7 +111,9 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 	} else {
 		const schedulerPriority = lanesToSchedulerPriority(updateLane);
 
+		// 也就是在 workLoop 里通过 shouldYield 的判断来打断渲染，之后把剩下的节点加入 Schedule 调度，来恢复渲染。
 		// 其他优先级，用宏任务调度
+		// 这里 performConcurrentWorkOnRoot 不会被真正地执行
 		newCallbackNode = scheduleCallback(
 			schedulerPriority,
 			// @ts-ignore
@@ -148,6 +150,7 @@ function performConcurrentWorkOnRoot(
 	const curCallback = root.callbackNode;
 	const didFlushPassiveEffect = flushPassiveEffects(root.pendingPassiveEffects);
 	if (didFlushPassiveEffect) {
+		// 如果已经在 root.callbackNode 变过了
 		if (root.callbackNode !== curCallback) {
 			return null;
 		}
@@ -162,10 +165,11 @@ function performConcurrentWorkOnRoot(
 	// render 阶段
 	const exitStatus: RootExitStatus = renderRoot(root, lane, !needSync);
 
+	// 再进行一次调度，如果此时有更高优先级的任务则会更改 root.callbackNode
 	ensureRootIsScheduled(root);
 
 	if (exitStatus === RootInComplete) {
-		// 中断
+		// 中断，如果已经在 root.callbackNode 变过了
 		if (root.callbackNode !== curCallbackNode) {
 			return null;
 		}
@@ -175,8 +179,13 @@ function performConcurrentWorkOnRoot(
 		 * Scheduler looks at the return value of task callback to see if there is continuation,
 		 * the return value is kind of rescheduling.
 		 */
+		/**
+		 * react 的并发模式的打断只会根据时间片，也就是每 5ms 就打断一次
+		 * 并不会根据优先级来打断，优先级只会影响任务队列的任务排序
+		 */
 		return performConcurrentWorkOnRoot.bind(null, root);
 	}
+	// render 阶段结束后进行 commit
 	if (exitStatus === RootCompleted) {
 		if (exitStatus === RootCompleted) {
 			// 使用双缓存机制，更新 root.current.alternate 而不直接更新 root.current
@@ -234,7 +243,10 @@ function renderRoot(root: FiberRootNode, lane: Lane, shouldTimeSlice: boolean) {
 
 	do {
 		try {
-			// 同步任务或者并发任务
+			/**
+			 * 同步任务或者并发任务
+			 * 由于 workInProgress 能够记录当前的工作单元，因此可以进行恢复
+			 */
 			shouldTimeSlice ? workLoopConcurrent() : workLoopSync();
 			break;
 		} catch (e) {
@@ -355,6 +367,7 @@ function workLoopSync() {
 }
 
 function workLoopConcurrent() {
+	// unstable_shouldYield 判断当前执行时间是否超过了 5 毫秒，如果超过了就不继续执行下一小段任务
 	while (workInProgress !== null && !unstable_shouldYield()) {
 		performUnitOfWork(workInProgress);
 	}

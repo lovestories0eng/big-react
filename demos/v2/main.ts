@@ -139,3 +139,29 @@ function doSomeBusyWork(len: number) {
 		result += len;
 	}
 }
+
+/**
+ * const tasks = [
+  ["C1", 100],
+  ["C2", 100],
+  ["C3", 100],
+  ["C4", 100],
+];
+const printC = (didTimeout) => {
+  while (tasks.length > 0) {
+    const [label, ms] = tasks.shift();
+    const start = new Date().getTime();
+    while (new Date().getTime() - start < ms) {}
+    console.log(label);
+    if (tasks.length > 0 && unstable_shouldYield()) {
+      return printC;
+    }
+  }
+};
+const taskC = unstable_scheduleCallback(NormalPriority, printC);
+// 如果注释掉下面的代码，则控制台输出 C1、C2、C3、C4
+setTimeout(() => {
+  unstable_cancelCallback(taskC);
+}, 0);
+
+ */
