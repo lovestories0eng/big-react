@@ -71,6 +71,10 @@ export function scheduleUpdateOnFiber(fiber: FiberNode, lane: Lane) {
 
 // schedule 入口
 function ensureRootIsScheduled(root: FiberRootNode) {
+	/**
+	 * 找到当前优先级最高的 lane
+	 * 该 lane 在之后会通过 lanesToSchedulerPriority 变成 priority 通过 scheduler 调度
+	 */
 	const updateLane = getHighestPriorityLane(root.pendingLanes);
 	const existingCallback = root.callbackNode;
 
@@ -87,7 +91,7 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 	const curPriority = updateLane;
 	const prevPriority = root.callbackPriority;
 
-	// 如果最新任务的优先级和当前执行的任务优先级一样就没必要打断当前执行的
+	// 如果最新任务的 lane 优先级和当前执行任务的 lane 优先级一样就没必要打断当前执行的
 	if (curPriority === prevPriority) {
 		return;
 	}
@@ -165,7 +169,7 @@ function performConcurrentWorkOnRoot(
 	// render 阶段
 	const exitStatus: RootExitStatus = renderRoot(root, lane, !needSync);
 
-	// 再进行一次调度，如果此时有更高优先级的任务则会更改 root.callbackNode
+	// 再进行一次调度，如果此时有不同优先级的任务则会更改 root.callbackNode
 	ensureRootIsScheduled(root);
 
 	if (exitStatus === RootInComplete) {

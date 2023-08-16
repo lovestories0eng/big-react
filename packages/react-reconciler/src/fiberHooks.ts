@@ -60,6 +60,7 @@ export function renderWithHooks(wip: FiberNode, lane: Lane) {
 	wip.memoizedState = null;
 	// 重置 effect 链表
 	wip.updateQueue = null;
+	// 为全局变量 renderLane 赋值
 	renderLane = lane;
 
 	// 双缓存机制，拿到已经渲染到浏览器中的 FiberNode

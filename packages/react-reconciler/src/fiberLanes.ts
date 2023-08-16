@@ -29,7 +29,10 @@ export function requestUpdateLanes() {
 		return TransitionLane;
 	}
 
-	// 从上下文环境中获取 Scheduler 优先级
+	/**
+	 * 从上下文环境中获取 Scheduler 优先级
+	 * React 的所有执行过程都是在 scheduler 中执行的，因此能够根据上下文获取到 priority
+	 */
 	const currentSchedulerPriority = unstable_getCurrentPriorityLevel();
 	const lane = schedulerPriorityToLane(currentSchedulerPriority);
 	return lane;
