@@ -62,8 +62,12 @@ function prepareFreshStack(root: FiberRootNode, lane: Lane) {
 }
 
 export function scheduleUpdateOnFiber(fiber: FiberNode, lane: Lane) {
-	// 找到 FiberRootNode
+	/**
+	 * 每次 schedule 时都要找到 FiberRootNode
+	 * 同步任务中同优先级会被合并成一个任务
+	 */
 	const root = markUpdateFormFiberToRoot(fiber);
+	// 把 lane 优先级合并到 root.pendingLanes
 	markRootUpdated(root, lane);
 	// 开始调度
 	ensureRootIsScheduled(root);
@@ -79,10 +83,11 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 	const existingCallback = root.callbackNode;
 
 	if (updateLane === NoLane) {
-		// 当最高优先级为 NoLane 时，取消当前的任务
+		// 如果渲染优先级为空，则不需要调度
 		if (existingCallback !== null) {
 			unstable_cancelCallback(existingCallback);
 		}
+		// 清空 callbackNode 和 callbackPriority
 		root.callbackNode = null;
 		root.callbackPriority = NoLane;
 		return;
@@ -91,11 +96,20 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 	const curPriority = updateLane;
 	const prevPriority = root.callbackPriority;
 
-	// 如果最新任务的 lane 优先级和当前执行任务的 lane 优先级一样就没必要打断当前执行的
+	/**
+	 * 节流(
+	 * 	判断条件:
+	 * 		curPriority === prevPriority,
+	 * 		新旧更新的优先级相同, 如连续多次执行setState
+	 * 	), 则无需注册新task(继续沿用上一个优先级相同的task), 直接退出调用.
+	 * 	如果相等，此次更新合并到当前正在进行的任务中。
+	 *  如果不相等，代表此次更新任务的优先级更高，需要打断当前正在进行的任务
+	 */
 	if (curPriority === prevPriority) {
 		return;
 	}
 
+	// 新任务的 lane 优先级比较高，取消掉旧任务，实现高优先级任务插队
 	if (existingCallback !== null) {
 		unstable_cancelCallback(existingCallback);
 	}
@@ -114,9 +128,8 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 		scheduleMicroTask(flushSyncCallbacks);
 	} else {
 		const schedulerPriority = lanesToSchedulerPriority(updateLane);
-
-		// 也就是在 workLoop 里通过 shouldYield 的判断来打断渲染，之后把剩下的节点加入 Schedule 调度，来恢复渲染。
 		// 其他优先级，用宏任务调度
+		// 也就是在 workLoop 里通过 shouldYield 的判断来打断渲染，之后把剩下的节点加入 Schedule 调度，来恢复渲染。
 		// 这里 performConcurrentWorkOnRoot 不会被真正地执行
 		newCallbackNode = scheduleCallback(
 			schedulerPriority,
@@ -124,6 +137,12 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 			performConcurrentWorkOnRoot.bind(null, root)
 		);
 	}
+	/**
+	 * 挂载到root节点的callbackNode属性上，以表示当前已经有任务被调度了，
+	 * 同时会将任务优先级存储到root的callbackPriority上，
+	 * 表示如果有新的任务进来，必须用它的任务优先级和已有任务的优先级（root.callbackPriority）比较，
+	 * 来决定是否有必要取消已经有的任务。
+	 */
 	root.callbackNode = newCallbackNode;
 	root.callbackPriority = curPriority;
 }
@@ -146,6 +165,12 @@ function markUpdateFormFiberToRoot(fiber: FiberNode) {
 	return null;
 }
 
+/**
+ * 在React的concurrent模式下，低优先级任务执行过程中，
+ * 一旦有更高优先级的任务进来，那么这个低优先级的任务会被取消，
+ * 优先执行高优先级任务。等高优先级任务做完了，低优先级任务会被重新做一遍。
+ * https://juejin.cn/post/6923792712197996557
+ */
 function performConcurrentWorkOnRoot(
 	root: FiberRootNode,
 	didTimeout: boolean
@@ -165,15 +190,16 @@ function performConcurrentWorkOnRoot(
 	if (lane === NoLane) {
 		return null;
 	}
+	// didTimeout 表示该任务在任务队列中的时间过长
 	const needSync = lane === SyncLane || didTimeout;
-	// render 阶段
+	// render 阶段，会通过 shouldYield 提前中断
 	const exitStatus: RootExitStatus = renderRoot(root, lane, !needSync);
 
 	// 再进行一次调度，如果此时有不同优先级的任务则会更改 root.callbackNode
 	ensureRootIsScheduled(root);
 
 	if (exitStatus === RootInComplete) {
-		// 中断，如果已经在 root.callbackNode 变过了
+		// 中断，如果已经在 root.callbackNode 变过了，说明有更高优先级的任务，则直接终止当前任务
 		if (root.callbackNode !== curCallbackNode) {
 			return null;
 		}
@@ -211,13 +237,14 @@ function performSyncWorkOnRoot(root: FiberRootNode) {
 	const nextLane = getHighestPriorityLane(root.pendingLanes);
 
 	if (nextLane !== SyncLane) {
-		// 非 SyncLane 的优先级
-		// NoLane
-		// 调度其他优先级任务
+		/**
+		 * 非 SyncLane 的优先级
+		 * NoLane
+		 * 调度其他优先级任务
+		 */
 		ensureRootIsScheduled(root);
 		return;
 	}
-
 	// 进入 render 阶段
 	const exitStatus = renderRoot(root, nextLane, false);
 
@@ -241,7 +268,7 @@ function renderRoot(root: FiberRootNode, lane: Lane, shouldTimeSlice: boolean) {
 	}
 
 	if (wipRootRenderLane !== lane) {
-		// 初始化
+		// 优先级不同则把 workInProgress 重置为 root
 		prepareFreshStack(root, lane);
 	}
 
@@ -292,6 +319,7 @@ function commitRoot(root: FiberRootNode) {
 	root.finishedWork = null;
 	root.finishedLane = NoLane;
 
+	// commit 阶段结束之后把 root lane 对应的位清除
 	markRootFinished(root, lane);
 
 	if (
@@ -330,7 +358,7 @@ function commitRoot(root: FiberRootNode) {
 	}
 
 	rootDoesHasPassiveEffect = false;
-	// 重新调度
+	// 重新调度，保证 root 上任何的 pendingLanes 都能被处理
 	ensureRootIsScheduled(root);
 }
 

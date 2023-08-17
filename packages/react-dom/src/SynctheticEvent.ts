@@ -37,11 +37,11 @@ export function intiEvent(container: Container, eventType: string) {
 
 	if (__DEV__) {
 		console.log('初始化事件：', eventType);
-
-		container.addEventListener(eventType, (e) => {
-			dispatchEvent(container, eventType, e);
-		});
 	}
+
+	container.addEventListener(eventType, (e) => {
+		dispatchEvent(container, eventType, e);
+	});
 }
 
 function createSynctheticEvent(e: Event) {
