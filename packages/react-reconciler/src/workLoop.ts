@@ -142,6 +142,7 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 	 * 同时会将任务优先级存储到root的callbackPriority上，
 	 * 表示如果有新的任务进来，必须用它的任务优先级和已有任务的优先级（root.callbackPriority）比较，
 	 * 来决定是否有必要取消已经有的任务。
+	 * 由于前面已经做了判断，因此这里的 curPriority 一定是最高的优先级
 	 */
 	root.callbackNode = newCallbackNode;
 	root.callbackPriority = curPriority;
@@ -225,6 +226,10 @@ function performConcurrentWorkOnRoot(
 			root.finishedLane = lane;
 			wipRootRenderLane = NoLane;
 
+			/**
+			 * 如果这里是高优先级任务之前抢断了低优先级任务
+			 * 则会把高优先级任务以及之前部分执行的低优先级任务进行 commit
+			 */
 			// wip fiberNode 树中的flags
 			commitRoot(root);
 		} else if (__DEV__) {
